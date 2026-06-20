@@ -46,7 +46,19 @@ void draw_battery_info(InfoLayer* info_layer) {
   int real_width = full_width * battery_level / 100;
   bat_level_rect = GRect(x_pos, y_pos, real_width, full_height);
   info_layer->bitmap_layer_2 = bitmap_layer_create(bat_level_rect);
+#if defined(PBL_COLOR)
+  GColor fill_color;
+  if (battery_level > 30) {
+    fill_color = GColorGreen;
+  } else if (battery_level >= 20) {
+    fill_color = GColorChromeYellow;
+  } else {
+    fill_color = GColorRed;
+  }
+  bitmap_layer_set_background_color(info_layer->bitmap_layer_2, fill_color);
+#else
   bitmap_layer_set_background_color(info_layer->bitmap_layer_2, GColorLightGray);
+#endif
 
   // Battery percentage text
 #if defined(PBL_PLATFORM_EMERY)
