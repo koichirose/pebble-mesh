@@ -24,11 +24,7 @@ void load_step_icon() {
 
 void update_step_count() {
   step_count = (int)health_service_sum_today(HealthMetricStepCount);
-  if (step_count < 1000) {
-    snprintf(s_step_buffer, sizeof(s_step_buffer), "%d", step_count);
-  } else {
-    snprintf(s_step_buffer, sizeof(s_step_buffer), "%d.%01dk", step_count / 1000, (step_count % 1000) / 100);
-  }
+  snprintf(s_step_buffer, sizeof(s_step_buffer), "%d", step_count);
 }
 
 void draw_steps_info(InfoLayer* info_layer) {
