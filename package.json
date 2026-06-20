@@ -1,7 +1,7 @@
 {
-  "name": "pebble-mesh",
-  "author": "David Peer",
-  "version": "1.55",
+  "name": "pebble-mesh-revamped",
+  "author": "koichirose",
+  "version": "1.56.0",
   "keywords": [
     "clock",
     "minimal",
@@ -14,8 +14,8 @@
     "pebble-clay": "^1.0.4"
   },
   "pebble": {
-    "displayName": "Pebble Mesh",
-    "uuid": "556723f4-387d-48f8-9318-419a041222d5",
+    "displayName": "Pebble Mesh Revamped",
+    "uuid": "f741d74b-429c-485a-a086-3c8b7e91c568",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "capabilities": [
