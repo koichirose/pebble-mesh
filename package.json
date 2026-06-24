@@ -58,7 +58,10 @@
       "DATE_FORMAT",
       "LIGHT_SHOW_BACKGROUND",
       "DARK_SHOW_BORDER",
-      "VIBRATE_ON_DISCONNECT"
+      "VIBRATE_ON_DISCONNECT",
+      "CUSTOM_URL",
+      "CUSTOM_DATA",
+      "CUSTOM_URL_REQUEST"
     ],
     "resources": {
       "media": [

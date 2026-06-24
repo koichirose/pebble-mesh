@@ -4,10 +4,6 @@ module.exports = [
     "defaultValue": "Pebble Mesh"
   },
   {
-    "type": "text",
-    "defaultValue": "<span>David Peer, 2026 | <a href='https://www.paypal.com/donate/?hosted_button_id=Y4PDJU84LC3N2'>Buy me a coffee</a> &#9749; </span>"
-  },
-  {
     "type": "section",
     "items": [
       {
@@ -111,6 +107,7 @@ module.exports = [
           { "label": "Heart Rate", "value": "8" },
           { "label": "Battery", "value": "3" },
           { "label": "Calendar", "value": "6" },
+          { "label": "Custom Data", "value": "9" },
           { "label": "None", "value": "5" }
         ]
       },
@@ -126,6 +123,7 @@ module.exports = [
           { "label": "Heart Rate", "value": "8" },
           { "label": "Battery", "value": "3" },
           { "label": "Calendar", "value": "6" },
+          { "label": "Custom Data", "value": "9" },
           { "label": "None", "value": "5" }
         ]
       },
@@ -141,6 +139,7 @@ module.exports = [
           { "label": "Heart Rate", "value": "8" },
           { "label": "Battery", "value": "3" },
           { "label": "Calendar", "value": "6" },
+          { "label": "Custom Data", "value": "9" },
           { "label": "None", "value": "5" }
         ]
       },
@@ -156,6 +155,7 @@ module.exports = [
           { "label": "Heart Rate", "value": "8" },
           { "label": "Battery", "value": "3" },
           { "label": "Calendar", "value": "6" },
+          { "label": "Custom Data", "value": "9" },
           { "label": "None", "value": "5" }
         ]
       },
@@ -255,6 +255,25 @@ module.exports = [
           { "label": "30 seconds", "value": "4" },
           { "label": "Until dismissed", "value": "2" }
         ]
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Custom Data"
+      },
+      {
+        "type": "input",
+        "messageKey": "CUSTOM_URL",
+        "label": "Custom Data URL",
+        "defaultValue": "",
+        "description": "Enter an HTTPS URL that returns a short plain-text value (max 32 characters shown). Fetched every 30 minutes. Example: a URL that returns your server's uptime or a custom sensor reading.",
+        "attributes": {
+          "placeholder": "https://example.com/data.txt"
+        }
       }
     ]
   },

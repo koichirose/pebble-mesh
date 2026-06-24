@@ -8,6 +8,7 @@
 #include "disconnect.h"
 #include "heart_rate.h"
 #include "weather_forecast.h"
+#include "custom_url.h"
 
 
 
@@ -59,6 +60,7 @@ static void draw_time(Layer *layer, GContext *ctx);
 static void draw_date(Layer *layer, GContext *ctx);
 static void inbox_received_callback(DictionaryIterator *iterator, void *context);
 static void delayed_weather_request(void *data);
+static void delayed_custom_url_request(void *data);
 static void init_info_layers(GRect bounds);
 static void update_all_info_layers();
 static void draw_info_for_type(InfoType info_type, InfoLayer* info_layer);
@@ -300,6 +302,15 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       save_vibrate_on_disconnect_to_storage();
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Vibrate on disconnect changed to: %d", s_vibrate_on_disconnect);
     }
+  }
+
+  // Read custom URL data value
+  Tuple *custom_data_tuple = dict_find(iterator, MESSAGE_KEY_CUSTOM_DATA);
+  if (custom_data_tuple) {
+    snprintf(s_custom_data, sizeof(s_custom_data), "%s", custom_data_tuple->value->cstring);
+    save_custom_data_to_storage();
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Custom data updated: %s", s_custom_data);
+    update_all_info_layers();
   }
 
   // Read disconnect position
@@ -751,6 +762,9 @@ static void draw_info_for_type(InfoType info_type, InfoLayer* info_layer) {
     case INFO_TYPE_HEART_RATE:
       draw_heart_rate_info(info_layer);
       break;
+    case INFO_TYPE_CUSTOM_URL:
+      draw_custom_url_info(info_layer);
+      break;
     case INFO_TYPE_COLORED_BOX:
       draw_colored_box_info(info_layer);
       break;
@@ -883,6 +897,12 @@ static void delayed_weather_request(void *data) {
   request_weather_update();
 }
 
+// Timer callback to request custom URL data after UI is loaded
+static void delayed_custom_url_request(void *data) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting custom URL update (delayed)");
+  request_custom_url_update();
+}
+
 // Initialize the 4 info layers with proper positioning
 static void init_info_layers(GRect bounds) {
 
@@ -950,6 +970,8 @@ static void main_window_appear(Window *window) {
 
   // Request weather update after a short delay to prevent blocking UI
   app_timer_register(100, delayed_weather_request, NULL);
+  // Request custom URL update separately
+  app_timer_register(200, delayed_custom_url_request, NULL);
 }
 
 static void main_window_load(Window *window) {
@@ -1094,6 +1116,7 @@ static void init() {
   load_light_show_background_from_storage();
   load_dark_show_border_from_storage();
   load_vibrate_on_disconnect_from_storage();
+  load_custom_data_from_storage();
 
   s_last_was_dark = is_dark_theme();
 
