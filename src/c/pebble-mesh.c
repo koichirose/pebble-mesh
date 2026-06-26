@@ -898,22 +898,24 @@ static void delayed_weather_request(void *data) {
   request_weather_update();
 }
 
+// Retry counter for delayed_custom_url_request — file-level so main_window_appear can reset it.
+static int s_custom_url_retries = 0;
+
 // Timer callback to request custom URL data after UI is loaded.
 // Retries up to 5 times if the outbox is still busy (e.g. weather request in flight).
 static void delayed_custom_url_request(void *data) {
-  static int s_retries = 0;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting custom URL update (delayed, attempt %d)", s_retries + 1);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting custom URL update (delayed, attempt %d)", s_custom_url_retries + 1);
   if (!request_custom_url_update()) {
-    if (++s_retries < 5) {
+    if (++s_custom_url_retries < 5) {
       app_timer_register(1000, delayed_custom_url_request, NULL);
     } else {
       APP_LOG(APP_LOG_LEVEL_WARNING, "Custom URL request gave up after 5 attempts");
       s_custom_data_stale = true;
       update_all_info_layers();
-      s_retries = 0;
+      s_custom_url_retries = 0;
     }
   } else {
-    s_retries = 0;
+    s_custom_url_retries = 0;
   }
 }
 
@@ -984,7 +986,10 @@ static void main_window_appear(Window *window) {
 
   // Request weather update after a short delay to prevent blocking UI
   app_timer_register(100, delayed_weather_request, NULL);
-  // Request custom URL update separately
+  // Request custom URL update separately; reset stale state and retry counter
+  // so a fresh window appearance never inherits red text from a previous retry cycle.
+  s_custom_data_stale = false;
+  s_custom_url_retries = 0;
   app_timer_register(200, delayed_custom_url_request, NULL);
 }
 
