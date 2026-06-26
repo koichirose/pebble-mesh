@@ -161,12 +161,6 @@ function getCoordinatesForCityAndFetchWeather(cityName) {
   xhr.send();
 }
 
-// INFO_TYPE values: 0=WEATHER_ICON, 1=TEMPERATURE, 9=CUSTOM_DATA
-function isWeatherNeeded() {
-  return [config.layoutUpperLeft, config.layoutUpperRight, config.layoutLowerLeft, config.layoutLowerRight]
-    .some(function(v) { return v === 0 || v === 1; });
-}
-
 function isCustomDataNeeded() {
   return [config.layoutUpperLeft, config.layoutUpperRight, config.layoutLowerLeft, config.layoutLowerRight]
     .some(function(v) { return v === 9; });
@@ -577,12 +571,8 @@ Pebble.addEventListener('appmessage', function(e) {
   
   // Check if it's a weather update request
   if (e.payload.WEATHER_REQUEST) {
-    if (isWeatherNeeded()) {
-      console.log('Weather update requested from watch');
-      fetchWeatherForLocation();
-    } else {
-      console.log('Weather update requested but no weather slot configured, skipping');
-    }
+    console.log('Weather update requested from watch');
+    fetchWeatherForLocation();
   }
 
   // Check if it's a custom URL update request
@@ -627,7 +617,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
     config.location = dict.WEATHER_LOCATION_CONFIG.value || ''; // Empty string for GPS
     localStorage.setItem('WEATHER_LOCATION_CONFIG', config.location);
     console.log('Location saved to: "' + config.location + '" (empty = GPS)');
-    if (isWeatherNeeded()) fetchWeatherForLocation();
+    fetchWeatherForLocation();
   }
   
   if (dict.COLOR_THEME) {
@@ -648,7 +638,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
     config.temperatureUnit = dict.TEMPERATURE_UNIT.value;
     localStorage.setItem('TEMPERATURE_UNIT', config.temperatureUnit);
     console.log('Temperature unit saved to: ' + config.temperatureUnit);
-    if (isWeatherNeeded()) fetchWeatherForLocation(); // Fetch weather again with new unit
+    fetchWeatherForLocation(); // Fetch weather again with new unit
   }
 
   if (dict.ENABLE_ANIMATIONS) {
@@ -744,7 +734,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
 // Update weather/custom data every 30 minutes
 setInterval(function() {
   console.log('Periodic update (30min timer)');
-  if (isWeatherNeeded()) fetchWeatherForLocation();
+  fetchWeatherForLocation();
   if (isCustomDataNeeded()) fetchCustomUrl();
 }, 30 * 60 * 1000);
 
