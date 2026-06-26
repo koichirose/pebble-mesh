@@ -9,6 +9,6 @@
 extern char s_custom_data[33];
 
 void draw_custom_url_info(InfoLayer* info_layer);
-void request_custom_url_update();
+bool request_custom_url_update(); // returns true if message was sent, false if outbox was busy
 
 #endif // CUSTOM_URL_H

@@ -897,10 +897,23 @@ static void delayed_weather_request(void *data) {
   request_weather_update();
 }
 
-// Timer callback to request custom URL data after UI is loaded
+// Timer callback to request custom URL data after UI is loaded.
+// Retries up to 5 times if the outbox is still busy (e.g. weather request in flight).
 static void delayed_custom_url_request(void *data) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting custom URL update (delayed)");
-  request_custom_url_update();
+  static int s_retries = 0;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting custom URL update (delayed, attempt %d)", s_retries + 1);
+  if (!request_custom_url_update()) {
+    if (++s_retries < 5) {
+      app_timer_register(1000, delayed_custom_url_request, NULL);
+    } else {
+      APP_LOG(APP_LOG_LEVEL_WARNING, "Custom URL request gave up after 5 attempts");
+      snprintf(s_custom_data, sizeof(s_custom_data), "N/A");
+      update_all_info_layers();
+      s_retries = 0;
+    }
+  } else {
+    s_retries = 0;
+  }
 }
 
 // Initialize the 4 info layers with proper positioning

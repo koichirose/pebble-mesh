@@ -1,25 +1,26 @@
 #include "custom_url.h"
 #include <string.h>
 
-char s_custom_data[33] = "--";
+char s_custom_data[33] = "N/A";
 
 // Parsed line buffers used by draw_custom_url_info (must persist after the function returns)
 static char s_line1[33];
 static char s_line2[33];
 
-void request_custom_url_update() {
+bool request_custom_url_update() {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting custom URL update");
 
   DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
+  AppMessageResult result = app_message_outbox_begin(&iter);
 
-  if (iter == NULL) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Failed to create message iterator");
-    return;
+  if (result != APP_MSG_OK || iter == NULL) {
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Outbox busy (result=%d), custom URL request not sent", (int)result);
+    return false;
   }
 
   dict_write_uint8(iter, MESSAGE_KEY_CUSTOM_URL_REQUEST, 1);
   app_message_outbox_send();
+  return true;
 }
 
 void draw_custom_url_info(InfoLayer* info_layer) {
