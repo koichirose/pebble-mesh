@@ -754,7 +754,6 @@ Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS ready!');
   // Push layout/config to watch immediately so panels are correct before data arrives
   sendDataToPebble();
-  if (isCustomDataNeeded()) fetchCustomUrl();
 });
 
 
