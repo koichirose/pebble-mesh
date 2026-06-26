@@ -722,9 +722,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
 });
 
-// Update weather every 30 minutes
+// Update weather/custom data every 30 minutes
 setInterval(function() {
-  console.log('Periodic weather update (30min timer) for: ' + config.location);
+  console.log('Periodic weather / custom data update (30min timer) for: ' + config.location);
   fetchWeatherForLocation();
   fetchCustomUrl();
 }, 30 * 60 * 1000);
