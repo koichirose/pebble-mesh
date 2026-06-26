@@ -308,6 +308,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *custom_data_tuple = dict_find(iterator, MESSAGE_KEY_CUSTOM_DATA);
   if (custom_data_tuple) {
     snprintf(s_custom_data, sizeof(s_custom_data), "%s", custom_data_tuple->value->cstring);
+    s_custom_data_stale = false;
     save_custom_data_to_storage();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Custom data updated: %s", s_custom_data);
     update_all_info_layers();
@@ -907,7 +908,7 @@ static void delayed_custom_url_request(void *data) {
       app_timer_register(1000, delayed_custom_url_request, NULL);
     } else {
       APP_LOG(APP_LOG_LEVEL_WARNING, "Custom URL request gave up after 5 attempts");
-      snprintf(s_custom_data, sizeof(s_custom_data), "N/A");
+      s_custom_data_stale = true;
       update_all_info_layers();
       s_retries = 0;
     }

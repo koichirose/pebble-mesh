@@ -2,6 +2,7 @@
 #include <string.h>
 
 char s_custom_data[33] = "N/A";
+bool s_custom_data_stale = false;
 
 // Parsed line buffers used by draw_custom_url_info (must persist after the function returns)
 static char s_line1[33];
@@ -26,6 +27,7 @@ bool request_custom_url_update() {
 void draw_custom_url_info(InfoLayer* info_layer) {
   GRect bounds = info_layer->bounds;
   Layer* layer = info_layer->layer;
+  GColor text_color = s_custom_data_stale ? PBL_IF_COLOR_ELSE(GColorRed, get_text_color()) : get_text_color();
 
   // Split on "||" if present
   const char *sep = strstr(s_custom_data, "||");
@@ -53,7 +55,7 @@ void draw_custom_url_info(InfoLayer* info_layer) {
 #endif
     info_layer->text_layer1 = text_layer_create(line1_frame);
     text_layer_set_background_color(info_layer->text_layer1, GColorClear);
-    text_layer_set_text_color(info_layer->text_layer1, get_text_color());
+    text_layer_set_text_color(info_layer->text_layer1, text_color);
     text_layer_set_text(info_layer->text_layer1, s_line1);
 #if defined(PBL_PLATFORM_EMERY)
     text_layer_set_font(info_layer->text_layer1, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
@@ -71,7 +73,7 @@ void draw_custom_url_info(InfoLayer* info_layer) {
 #endif
     info_layer->text_layer2 = text_layer_create(line2_frame);
     text_layer_set_background_color(info_layer->text_layer2, GColorClear);
-    text_layer_set_text_color(info_layer->text_layer2, get_text_color());
+    text_layer_set_text_color(info_layer->text_layer2, text_color);
     text_layer_set_text(info_layer->text_layer2, s_line2);
 #if defined(PBL_PLATFORM_EMERY)
     text_layer_set_font(info_layer->text_layer2, fonts_get_system_font(FONT_KEY_GOTHIC_18));
@@ -85,7 +87,7 @@ void draw_custom_url_info(InfoLayer* info_layer) {
     // Single line — centered in the panel
     info_layer->text_layer1 = text_layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
     text_layer_set_background_color(info_layer->text_layer1, GColorClear);
-    text_layer_set_text_color(info_layer->text_layer1, get_text_color());
+    text_layer_set_text_color(info_layer->text_layer1, text_color);
     text_layer_set_text(info_layer->text_layer1, s_line1);
 #if defined(PBL_PLATFORM_EMERY)
     text_layer_set_font(info_layer->text_layer1, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
