@@ -161,6 +161,17 @@ function getCoordinatesForCityAndFetchWeather(cityName) {
   xhr.send();
 }
 
+// INFO_TYPE values: 0=WEATHER_ICON, 1=TEMPERATURE, 9=CUSTOM_DATA
+function isWeatherNeeded() {
+  return [config.layoutUpperLeft, config.layoutUpperRight, config.layoutLowerLeft, config.layoutLowerRight]
+    .some(function(v) { return v === 0 || v === 1; });
+}
+
+function isCustomDataNeeded() {
+  return [config.layoutUpperLeft, config.layoutUpperRight, config.layoutLowerLeft, config.layoutLowerRight]
+    .some(function(v) { return v === 9; });
+}
+
 // Main function to fetch weather for configured location
 function fetchWeatherForLocation() {
   console.log('Fetching weather for configured location: ' + config.location);
@@ -566,14 +577,22 @@ Pebble.addEventListener('appmessage', function(e) {
   
   // Check if it's a weather update request
   if (e.payload.WEATHER_REQUEST) {
-    console.log('Weather update requested from watch');
-    fetchWeatherForLocation();
+    if (isWeatherNeeded()) {
+      console.log('Weather update requested from watch');
+      fetchWeatherForLocation();
+    } else {
+      console.log('Weather update requested but no weather slot configured, skipping');
+    }
   }
 
   // Check if it's a custom URL update request
   if (e.payload.CUSTOM_URL_REQUEST) {
-    console.log('Custom URL update requested from watch');
-    fetchCustomUrl();
+    if (isCustomDataNeeded()) {
+      console.log('Custom URL update requested from watch');
+      fetchCustomUrl();
+    } else {
+      console.log('Custom URL update requested but no custom data slot configured, skipping');
+    }
   }
   
   // Check if it's a location configuration update
@@ -608,7 +627,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
     config.location = dict.WEATHER_LOCATION_CONFIG.value || ''; // Empty string for GPS
     localStorage.setItem('WEATHER_LOCATION_CONFIG', config.location);
     console.log('Location saved to: "' + config.location + '" (empty = GPS)');
-    fetchWeatherForLocation();
+    if (isWeatherNeeded()) fetchWeatherForLocation();
   }
   
   if (dict.COLOR_THEME) {
@@ -629,7 +648,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
     config.temperatureUnit = dict.TEMPERATURE_UNIT.value;
     localStorage.setItem('TEMPERATURE_UNIT', config.temperatureUnit);
     console.log('Temperature unit saved to: ' + config.temperatureUnit);
-    fetchWeatherForLocation(); // Fetch weather again with new unit
+    if (isWeatherNeeded()) fetchWeatherForLocation(); // Fetch weather again with new unit
   }
 
   if (dict.ENABLE_ANIMATIONS) {
@@ -671,7 +690,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
     config.customUrl = dict.CUSTOM_URL.value || '';
     localStorage.setItem('CUSTOM_URL', config.customUrl);
     console.log('Custom URL saved to: ' + config.customUrl);
-    fetchCustomUrl();
+    if (isCustomDataNeeded()) fetchCustomUrl();
   }
 
   if (dict.DATE_FORMAT !== undefined) {
@@ -724,9 +743,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
 // Update weather/custom data every 30 minutes
 setInterval(function() {
-  console.log('Periodic weather / custom data update (30min timer) for: ' + config.location);
-  fetchWeatherForLocation();
-  fetchCustomUrl();
+  console.log('Periodic update (30min timer)');
+  if (isWeatherNeeded()) fetchWeatherForLocation();
+  if (isCustomDataNeeded()) fetchCustomUrl();
 }, 30 * 60 * 1000);
 
 
@@ -735,7 +754,7 @@ Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS ready!');
   // Push layout/config to watch immediately so panels are correct before data arrives
   sendDataToPebble();
-  fetchCustomUrl();
+  if (isCustomDataNeeded()) fetchCustomUrl();
 });
 
 
