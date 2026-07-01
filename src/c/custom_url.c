@@ -27,7 +27,8 @@ bool request_custom_url_update() {
 void draw_custom_url_info(InfoLayer* info_layer) {
   GRect bounds = info_layer->bounds;
   Layer* layer = info_layer->layer;
-  GColor text_color = s_custom_data_stale ? PBL_IF_COLOR_ELSE(GColorRed, get_text_color()) : get_text_color();
+  GColor stale_color = is_dark_theme() ? GColorYellow : GColorRed;
+  GColor text_color = s_custom_data_stale ? PBL_IF_COLOR_ELSE(stale_color, get_text_color()) : get_text_color();
 
   // Split on "||" if present
   const char *sep = strstr(s_custom_data, "||");
