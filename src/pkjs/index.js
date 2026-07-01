@@ -444,8 +444,9 @@ function fetchCustomUrl() {
         console.log('Custom URL response: ' + text);
         enqueueMessage('custom_data', { 'CUSTOM_DATA': text });
       } else {
-        console.log('Custom URL request failed with status: ' + xhr.status);
-        enqueueMessage('custom_data', { 'CUSTOM_DATA': 'Error ' + xhr.status });
+        // Transient failure - keep showing the last known-good value on the watch
+        // instead of overwriting it with an error string (same approach as weather).
+        console.log('Custom URL request failed with status: ' + xhr.status + ', keeping last known value');
       }
     }
   };
@@ -453,12 +454,10 @@ function fetchCustomUrl() {
   xhr.open('GET', url, true);
   xhr.timeout = 10000;
   xhr.ontimeout = function() {
-    console.log('Custom URL request timed out');
-    enqueueMessage('custom_data', { 'CUSTOM_DATA': 'Timeout' });
+    console.log('Custom URL request timed out, keeping last known value');
   };
   xhr.onerror = function() {
-    console.log('Custom URL request network error');
-    enqueueMessage('custom_data', { 'CUSTOM_DATA': 'Net Error' });
+    console.log('Custom URL request network error, keeping last known value');
   };
   xhr.send();
 }
