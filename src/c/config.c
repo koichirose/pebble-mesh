@@ -16,6 +16,8 @@ char s_date_format[16] = " %a %d"; // strftime format string for date display
 int s_light_show_background = 1; // 1 = show gray box in light theme, 0 = hide
 int s_dark_show_border = 1; // 1 = show border in dark theme, 0 = hide
 int s_vibrate_on_disconnect = 0; // 0 = disabled, 1 = vibrate on connect/disconnect
+int s_light_bg_color = 0xFFFFFF; // Background color for light theme as 0xRRGGBB
+int s_dark_bg_color = 0x000000; // Background color for dark theme as 0xRRGGBB
 
 InfoLayer s_info_layers[NUM_INFO_LAYERS];
 InfoType s_layer_assignments[NUM_INFO_LAYERS] = {
@@ -61,9 +63,36 @@ bool is_light_theme(){
 }
 
 
+static int get_active_bg_hex() {
+  return is_light_theme() ? s_light_bg_color : s_dark_bg_color;
+}
+
 // Function to get colors based on theme
 GColor get_background_color() {
+#if defined(PBL_COLOR)
+  return GColorFromHEX(get_active_bg_hex());
+#else
+  // On black-and-white displays only pure black and white can be a window
+  // background color. Gray is rendered as a dithered fill in draw_frame
+  // (see is_bw_gray_background), on top of the theme's base color.
+  int hex = get_active_bg_hex();
+  if (hex == 0x000000) {
+    return GColorBlack;
+  }
+  if (hex == 0xFFFFFF) {
+    return GColorWhite;
+  }
   return is_light_theme() ? GColorWhite : GColorBlack;
+#endif
+}
+
+bool is_bw_gray_background() {
+#if defined(PBL_COLOR)
+  return false;
+#else
+  int hex = get_active_bg_hex();
+  return hex != 0x000000 && hex != 0xFFFFFF;
+#endif
 }
 
 GColor get_text_color() {
@@ -235,6 +264,22 @@ void load_dark_show_border_from_storage() {
     s_dark_show_border = 1; // Default to enabled
     APP_LOG(APP_LOG_LEVEL_DEBUG, "No dark show border preference found, using default enabled");
   }
+}
+
+void save_bg_colors_to_storage() {
+  persist_write_int(PERSIST_KEY_LIGHT_BG_COLOR, s_light_bg_color);
+  persist_write_int(PERSIST_KEY_DARK_BG_COLOR, s_dark_bg_color);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Saved background colors to storage: %x / %x", s_light_bg_color, s_dark_bg_color);
+}
+
+void load_bg_colors_from_storage() {
+  if (persist_exists(PERSIST_KEY_LIGHT_BG_COLOR)) {
+    s_light_bg_color = persist_read_int(PERSIST_KEY_LIGHT_BG_COLOR);
+  }
+  if (persist_exists(PERSIST_KEY_DARK_BG_COLOR)) {
+    s_dark_bg_color = persist_read_int(PERSIST_KEY_DARK_BG_COLOR);
+  }
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded background colors from storage: %x / %x", s_light_bg_color, s_dark_bg_color);
 }
 
 void save_vibrate_on_disconnect_to_storage() {

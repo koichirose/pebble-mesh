@@ -304,6 +304,23 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
   }
 
+  // Read background colors for light and dark theme
+  Tuple *light_bg_color_tuple = dict_find(iterator, MESSAGE_KEY_LIGHT_BG_COLOR);
+  Tuple *dark_bg_color_tuple = dict_find(iterator, MESSAGE_KEY_DARK_BG_COLOR);
+  bool bg_colors_changed = false;
+  if (light_bg_color_tuple && (int)light_bg_color_tuple->value->int32 != s_light_bg_color) {
+    s_light_bg_color = (int)light_bg_color_tuple->value->int32;
+    bg_colors_changed = true;
+  }
+  if (dark_bg_color_tuple && (int)dark_bg_color_tuple->value->int32 != s_dark_bg_color) {
+    s_dark_bg_color = (int)dark_bg_color_tuple->value->int32;
+    bg_colors_changed = true;
+  }
+  if (bg_colors_changed) {
+    save_bg_colors_to_storage();
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Background colors changed to: %x / %x", s_light_bg_color, s_dark_bg_color);
+    update_colors();
+  }
   // Read custom URL data value
   Tuple *custom_data_tuple = dict_find(iterator, MESSAGE_KEY_CUSTOM_DATA);
   if (custom_data_tuple) {
@@ -432,6 +449,13 @@ static void draw_frame(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   GColor frame_color = get_text_color(); // Use theme-appropriate color
 
+  // On black-and-white displays a gray background is not possible as window
+  // background color, so draw it as a dithered 50% gray fill instead
+  if (is_bw_gray_background()) {
+    graphics_context_set_fill_color(ctx, GColorLightGray);
+    graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+  }
+
   // In case we have dark theme, we draw a border frame
   if(BORDER_THICKNESS > 0 && is_dark_theme() && s_dark_show_border) {
     graphics_context_set_stroke_color(ctx, frame_color);
@@ -448,7 +472,7 @@ static void draw_frame(Layer *layer, GContext *ctx) {
     const int line_x_start_full = (bounds.size.w - max_line_length) / 2;
     const int time_y = bounds.size.h / 2;
 #if defined(PBL_PLATFORM_EMERY)
-    const int line_y_offset = 38;
+    const int line_y_offset = 48;
 #else
     const int line_y_offset = 30;
 #endif
@@ -490,7 +514,7 @@ static void draw_animation(Layer *layer, GContext *ctx) {
   const int line_x_end_full = line_x_start_full + max_line_length;
   const int time_y = bounds.size.h / 2;
 #if defined(PBL_PLATFORM_EMERY)
-  const int line_y_offset = 38;
+  const int line_y_offset = 48;
 #else
   const int line_y_offset = 30;
 #endif
@@ -596,7 +620,22 @@ static void draw_animation(Layer *layer, GContext *ctx) {
 // --- Draw Time with Outline ---
 static void draw_time(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
+#if defined(PBL_PLATFORM_EMERY)
+  // LECO 60 exists only on newer PebbleOS firmware. Older firmware returns
+  // the tiny fallback font for unknown keys, so detect that and use
+  // Roboto 49 instead.
+  static GFont s_emery_time_font = NULL;
+  if (s_emery_time_font == NULL) {
+    GFont leco_60 = fonts_get_system_font(FONT_KEY_LECO_60_NUMBERS_AM_PM);
+    if (leco_60 == fonts_get_system_font("RESOURCE_ID_NONEXISTENT_FONT")) {
+      leco_60 = fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49);
+    }
+    s_emery_time_font = leco_60;
+  }
+  GFont font = s_emery_time_font;
+#else
   GFont font = fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS);
+#endif
   
   // Calculate animation progress
   float animation_factor = 1.0f - ((float)current_animation_frame / NUM_ANIMATION_FRAMES);
@@ -614,11 +653,15 @@ static void draw_time(Layer *layer, GContext *ctx) {
     strcpy(display_buffer, s_time_buffer);
   }
   
-  // In light mode, draw white outline around black text
-  if (is_light_theme()) {
-    // Draw white outline by drawing the text 4 times with 1-pixel offsets
-    graphics_context_set_text_color(ctx, GColorWhite);
-    
+  // In light mode (and on a dithered gray background) draw an outline
+  // around the text for readability
+  if (is_light_theme() || is_bw_gray_background()) {
+    GColor text_color = get_text_color();
+    GColor outline_color = gcolor_equal(text_color, GColorBlack) ? GColorWhite : GColorBlack;
+
+    // Draw outline by drawing the text 4 times with 1-pixel offsets
+    graphics_context_set_text_color(ctx, outline_color);
+
     // Left
     graphics_draw_text(ctx, display_buffer, font,
                       GRect(bounds.origin.x - 1, bounds.origin.y, bounds.size.w, bounds.size.h),
@@ -635,9 +678,9 @@ static void draw_time(Layer *layer, GContext *ctx) {
     graphics_draw_text(ctx, display_buffer, font,
                       GRect(bounds.origin.x, bounds.origin.y + 1, bounds.size.w, bounds.size.h),
                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-    
-    // Draw black text in center
-    graphics_context_set_text_color(ctx, GColorBlack);
+
+    // Draw text in center
+    graphics_context_set_text_color(ctx, text_color);
     graphics_draw_text(ctx, display_buffer, font,
                       bounds,
                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
@@ -678,11 +721,15 @@ static void draw_date(Layer *layer, GContext *ctx) {
     strcpy(display_buffer, s_date_buffer);
   }
   
-  // In light mode, draw white outline around black text
-  if (is_light_theme()) {
-    // Draw white outline by drawing the text 4 times with 1-pixel offsets
-    graphics_context_set_text_color(ctx, GColorWhite);
-    
+  // In light mode (and on a dithered gray background) draw an outline
+  // around the text for readability
+  if (is_light_theme() || is_bw_gray_background()) {
+    GColor text_color = get_text_color();
+    GColor outline_color = gcolor_equal(text_color, GColorBlack) ? GColorWhite : GColorBlack;
+
+    // Draw outline by drawing the text 4 times with 1-pixel offsets
+    graphics_context_set_text_color(ctx, outline_color);
+
     // Left
     graphics_draw_text(ctx, display_buffer, font,
                       GRect(bounds.origin.x - 1, bounds.origin.y, bounds.size.w, bounds.size.h),
@@ -699,9 +746,9 @@ static void draw_date(Layer *layer, GContext *ctx) {
     graphics_draw_text(ctx, display_buffer, font,
                       GRect(bounds.origin.x, bounds.origin.y + 1, bounds.size.w, bounds.size.h),
                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-    
-    // Draw black text in center
-    graphics_context_set_text_color(ctx, GColorBlack);
+
+    // Draw text in center
+    graphics_context_set_text_color(ctx, text_color);
     graphics_draw_text(ctx, display_buffer, font,
                       bounds,
                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
@@ -1018,7 +1065,7 @@ static void main_window_load(Window *window) {
 
   // Create Time Layer
 #if defined(PBL_PLATFORM_EMERY)
-  const int time_y_pos = bounds.size.h / 2 - 20 - 18;
+  const int time_y_pos = bounds.size.h / 2 - 20 - 26;
 #else
   const int time_y_pos = bounds.size.h / 2 - 20 - 14;
 #endif
@@ -1030,7 +1077,7 @@ static void main_window_load(Window *window) {
   // Create the Date Layer (Center below time)
 #if defined(PBL_PLATFORM_EMERY)
   s_date_layer = layer_create(
-      GRect(0, time_y_pos + 44, bounds.size.w, 28));
+      GRect(0, time_y_pos + 62, bounds.size.w, 28));
 #else
   s_date_layer = layer_create(
       GRect(0, time_y_pos + 38, bounds.size.w, 24));
@@ -1142,6 +1189,7 @@ static void init() {
   load_light_show_background_from_storage();
   load_dark_show_border_from_storage();
   load_vibrate_on_disconnect_from_storage();
+  load_bg_colors_from_storage();
   load_custom_data_from_storage();
 
   s_last_was_dark = is_dark_theme();

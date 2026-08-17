@@ -21,8 +21,15 @@ var config = {
   lightShowBackground: true, // Show gray box in light theme
   darkShowBorder: true, // Show border in dark theme
   vibrateOnDisconnect: false, // Vibrate on connect/disconnect
+  lightBgColor: 0xFFFFFF, // Background color for light theme
+  darkBgColor: 0x000000 // Background color for dark theme
   customUrl: '' // URL to fetch custom data from
 };
+
+// Clay's color picker sends an int, the BW select sends a hex string
+function toColorInt(value) {
+  return typeof value === 'number' ? value : parseInt(value, 16);
+}
 
 // Load saved configuration
 if (localStorage.getItem('WEATHER_LOCATION_CONFIG')) {
@@ -75,6 +82,12 @@ if (localStorage.getItem('DARK_SHOW_BORDER') !== null) {
 }
 if (localStorage.getItem('VIBRATE_ON_DISCONNECT') !== null) {
   config.vibrateOnDisconnect = (localStorage.getItem('VIBRATE_ON_DISCONNECT') === 'true');
+}
+if (localStorage.getItem('LIGHT_BG_COLOR') !== null) {
+  config.lightBgColor = parseInt(localStorage.getItem('LIGHT_BG_COLOR'), 10);
+}
+if (localStorage.getItem('DARK_BG_COLOR') !== null) {
+  config.darkBgColor = parseInt(localStorage.getItem('DARK_BG_COLOR'), 10);
 }
 if (localStorage.getItem('CUSTOM_URL') !== null) {
   config.customUrl = localStorage.getItem('CUSTOM_URL');
@@ -538,7 +551,9 @@ function sendDataToPebble() {
     'DATE_FORMAT': config.dateFormat,
     'LIGHT_SHOW_BACKGROUND': config.lightShowBackground ? 1 : 0,
     'DARK_SHOW_BORDER': config.darkShowBorder ? 1 : 0,
-    'VIBRATE_ON_DISCONNECT': config.vibrateOnDisconnect ? 1 : 0
+    'VIBRATE_ON_DISCONNECT': config.vibrateOnDisconnect ? 1 : 0,
+    'LIGHT_BG_COLOR': config.lightBgColor,
+    'DARK_BG_COLOR': config.darkBgColor
   });
 
   // Message 2: Weather data + forecast
@@ -665,6 +680,20 @@ Pebble.addEventListener('webviewclosed', function(e) {
     config.darkShowBorder = dict.DARK_SHOW_BORDER.value;
     localStorage.setItem('DARK_SHOW_BORDER', config.darkShowBorder);
     console.log('Dark show border saved to: ' + config.darkShowBorder);
+    layoutChanged = true;
+  }
+
+  if (dict.LIGHT_BG_COLOR !== undefined) {
+    config.lightBgColor = toColorInt(dict.LIGHT_BG_COLOR.value);
+    localStorage.setItem('LIGHT_BG_COLOR', config.lightBgColor);
+    console.log('Light background color saved to: ' + config.lightBgColor);
+    layoutChanged = true;
+  }
+
+  if (dict.DARK_BG_COLOR !== undefined) {
+    config.darkBgColor = toColorInt(dict.DARK_BG_COLOR.value);
+    localStorage.setItem('DARK_BG_COLOR', config.darkBgColor);
+    console.log('Dark background color saved to: ' + config.darkBgColor);
     layoutChanged = true;
   }
 

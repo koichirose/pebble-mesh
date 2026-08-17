@@ -22,6 +22,8 @@
       "configurable"
     ],
     "targetPlatforms": [
+      "basalt",
+      "diorite",
       "emery"
     ],
     "watchapp": {
@@ -59,6 +61,8 @@
       "LIGHT_SHOW_BACKGROUND",
       "DARK_SHOW_BORDER",
       "VIBRATE_ON_DISCONNECT",
+      "LIGHT_BG_COLOR",
+      "DARK_BG_COLOR",
       "CUSTOM_URL",
       "CUSTOM_DATA",
       "CUSTOM_URL_REQUEST"
