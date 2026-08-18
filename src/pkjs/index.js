@@ -22,7 +22,7 @@ var config = {
   darkShowBorder: true, // Show border in dark theme
   vibrateOnDisconnect: false, // Vibrate on connect/disconnect
   lightBgColor: 0xFFFFFF, // Background color for light theme
-  darkBgColor: 0x000000 // Background color for dark theme
+  darkBgColor: 0x000000, // Background color for dark theme
   customUrl: '' // URL to fetch custom data from
 };
 

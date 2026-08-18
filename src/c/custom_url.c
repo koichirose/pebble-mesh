@@ -93,7 +93,7 @@ void draw_custom_url_info(InfoLayer* info_layer) {
 #if defined(PBL_PLATFORM_EMERY)
     text_layer_set_font(info_layer->text_layer1, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 #else
-    text_layer_set_font(info_layer->text_layer1, fonts_get_system_font(FONT_KEY_GOTHIC_14_MEDIUM));
+    text_layer_set_font(info_layer->text_layer1, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
 #endif
     text_layer_set_text_alignment(info_layer->text_layer1, GTextAlignmentCenter);
     text_layer_set_overflow_mode(info_layer->text_layer1, GTextOverflowModeWordWrap);
